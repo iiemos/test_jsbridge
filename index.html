@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .buttons {
+            margin: 10px auto;
+            width: 90%;
+            border-radius: 4px;
+            text-align: center;
+            padding: 4px 10px;
+            background: skyblue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="warp">
+        <div>
+            标题：
+            <input type="text" id="tltle">
+        </div>
+        <div>
+            内容：
+            <input type="text" id="content">
+        </div>
+        <div id="lang"></div>
+        <div id="data"></div>
+        <div class="buttons" id="submitBtn">
+            提交
+        </div>
+        <div>
+            当前app版本：
+            <span id="versionData"></span>
+        </div>
+        <div class="buttons" id="getVisn">
+            获取app版本
+        </div>
+    </div>
+    <script>
+        var bridge = {
+            default: this, call: function (b, a, c) { var e = ""; "function" == typeof a && (c = a, a = {}); a = { data: void 0 === a ? null : a }; if ("function" == typeof c) { var g = "dscb" + window.dscb++; window[g] = c; a._dscbstub = g } a = JSON.stringify(a); if (window._dsbridge) e = _dsbridge.call(b, a); else if (window._dswk || -1 != navigator.userAgent.indexOf("_dsbridge")) e = prompt("_dsbridge=" + b, a); return JSON.parse(e || "{}").data }, register: function (b, a, c) {
+                c = c ? window._dsaf : window._dsf; window._dsInit || (window._dsInit = !0, setTimeout(function () { bridge.call("_dsb.dsinit") },
+                    0)); "object" == typeof a ? c._obs[b] = a : c[b] = a
+            }, registerAsyn: function (b, a) { this.register(b, a, !0) }, hasNativeMethod: function (b, a) { return this.call("_dsb.hasNativeMethod", { name: b, type: a || "all" }) }, disableJavascriptDialogBlock: function (b) { this.call("_dsb.disableJavascriptDialogBlock", { disable: !1 !== b }) }
+        };
+        !function () {
+            if (!window._dsf) {
+                var b = {
+                    _dsf: { _obs: {} }, _dsaf: { _obs: {} }, dscb: 0, dsBridge: bridge, close: function () { bridge.call("_dsb.closePage") }, _handleMessageFromNative: function (a) {
+                        var e = JSON.parse(a.data), b = { id: a.callbackId, complete: !0 }, c = this._dsf[a.method], d = this._dsaf[a.method], h = function (a, c) { b.data = a.apply(c, e); bridge.call("_dsb.returnValue", b) }, k = function (a, c) { e.push(function (a, c) { b.data = a; b.complete = !1 !== c; bridge.call("_dsb.returnValue", b) }); a.apply(c, e) }; if (c) h(c, this._dsf); else if (d) k(d, this._dsaf);
+                        else if (c = a.method.split("."), !(2 > c.length)) { a = c.pop(); var c = c.join("."), d = this._dsf._obs, d = d[c] || {}, f = d[a]; f && "function" == typeof f ? h(f, d) : (d = this._dsaf._obs, d = d[c] || {}, (f = d[a]) && "function" == typeof f && k(f, d)) }
+                    }
+                }, a; for (a in b) window[a] = b[a]; bridge.register("_hasJavascriptMethod", function (a, b) { b = a.split("."); if (2 > b.length) return !(!_dsf[b] && !_dsaf[b]); a = b.pop(); b = b.join("."); return (b = _dsf._obs[b] || _dsaf._obs[b]) && !!b[a] })
+            }
+        }();
+    </script>
+    <script>
+
+        function getUrlParams(url) {
+            // 通过 ? 分割获取后面的参数字符串
+            let urlStr = url.split('?')[1]
+            // 创建空对象存储参数
+            let obj = {};
+            // 再通过 & 将每一个参数单独分割出来
+            let paramsArr = urlStr.split('&')
+            for (let i = 0, len = paramsArr.length; i < len; i++) {
+                // 再通过 = 将每一个参数分割为 key:value 的形式
+                let arr = paramsArr[i].split('=')
+                obj[arr[0]] = arr[1];
+            }
+            return obj
+        }
+
+        document.querySelector('#lang').innerText = JSON.stringify(getUrlParams(location.href))
+
+        let btn = document.querySelector('#submitBtn')
+        var Documents = document
+        btn.addEventListener('click', function () {
+            let titleval = Documents.querySelector('#tltle').value
+            let contentval = Documents.querySelector('#content').value
+            let jsonObj1 = {
+                type: "request",
+                content: {
+                    url: '/send/submit',
+                    requestMethod: 'post',
+                    parameter: {
+                        title: titleval,
+                        ctx: contentval,
+                    }
+                }
+            }
+            window.flutter_inappwebview.callHandler('sendMsgToApp', JSON.stringify(jsonObj1)).then(function (result) {
+                var jsonStr = JSON.stringify(result);
+                document.getElementById("data").innerText = "发送成功的回调" + jsonStr;
+                Documents.querySelector('#tltle').value = ''
+                Documents.querySelector('#content').value = ''
+            });
+        })
+
+        let getvions = document.querySelector('#getVisn')
+        getvions.addEventListener('click', function (e) {
+            let jsonObj2 = {
+                type: "getAppVersion",
+                content: ''
+            }
+            window.flutter_inappwebview.callHandler('sendMsgToApp', JSON.stringify(jsonObj2)).then(function (result) {
+                var jsonStr = JSON.stringify(result);
+                Documents.querySelector('#versionData').innerText = jsonStr
+            });
+        })
+        function receiveMsgFromApp(message) {
+            var jsonStr = JSON.stringify(message);// 解析json
+            document.getElementById("data").innerText = "app发来的消息：" + jsonStr;
+        }
+    </script>
+</body>
+
+</html>
